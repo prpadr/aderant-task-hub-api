@@ -10,7 +10,7 @@ const stripQuotes = (value: string | undefined): string => {
 
 export default {
     nodeEnv: process.env.NODE_ENV || 'development',
-    port: process.env.PORT || 3001,
+    port: process.env.PORT || 3006,
     github: {
         token: stripQuotes(process.env.GITHUB_TOKEN),
         username: stripQuotes(process.env.GITHUB_USERNAME),
