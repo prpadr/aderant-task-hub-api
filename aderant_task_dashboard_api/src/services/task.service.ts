@@ -11,11 +11,11 @@ class TaskService {
         this.adoService = new AzureDevOpsService();
     }
 
-    async aggregateAllTasks(): Promise<Task[]> {
+    async aggregateAllTasks(userEmail: string): Promise<Task[]> {
         try {
             const [pullRequests, workItems] = await Promise.all([
-                this.githubService.getAssignedPullRequests(),
-                this.adoService.getCurrentSprintWorkItems(),
+                this.githubService.getAssignedPullRequests(userEmail),
+                this.adoService.getCurrentSprintWorkItems(userEmail),
             ]);
 
             const tasks: Task[] = [

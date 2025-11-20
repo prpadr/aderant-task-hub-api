@@ -13,7 +13,6 @@ export default {
     port: process.env.PORT || 3006,
     github: {
         token: stripQuotes(process.env.GITHUB_TOKEN),
-        username: stripQuotes(process.env.GITHUB_USERNAME),
     },
     azureDevOps: {
         organization: stripQuotes(process.env.AZURE_DEVOPS_ORG),

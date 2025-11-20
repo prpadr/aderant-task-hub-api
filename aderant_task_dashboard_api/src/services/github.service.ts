@@ -11,9 +11,17 @@ class GitHubService {
         });
     }
 
-    async getAssignedPullRequests(): Promise<PullRequest[]> {
+    async getAssignedPullRequests(userEmail: string): Promise<PullRequest[]> {
         try {
-            console.log('🔍 GitHub Username:', config.github.username);
+            console.log('🔍 Fetching GitHub username for email:', userEmail);
+            const username = await this.getUsernameByEmail(userEmail);
+            
+            if (!username) {
+                console.log('⚠️ No GitHub username found for email:', userEmail);
+                return [];
+            }
+
+            console.log('🔍 GitHub Username:', username);
             console.log('🔍 GitHub Token:', config.github.token ? '✓ Set' : '✗ Not Set');
             console.log('🔍 Token length:', config.github.token.length);
             console.log('🔍 Token first 15 chars:', config.github.token.substring(0, 15));
@@ -21,9 +29,9 @@ class GitHubService {
             
             // Search for PRs where user is assigned, author, or review-requested
             const queries = [
-                `is:pr is:open assignee:${config.github.username}`,
-                `is:pr is:open author:${config.github.username}`,
-                `is:pr is:open review-requested:${config.github.username}`,
+                `is:pr is:open assignee:${username}`,
+                `is:pr is:open author:${username}`,
+                `is:pr is:open review-requested:${username}`,
             ];
             
             console.log('🔍 Search Queries:', queries);
@@ -64,6 +72,33 @@ class GitHubService {
             console.error('Error Response:', error.response?.data);
             console.error('Full Error:', JSON.stringify(error, null, 2));
             throw new Error('Failed to fetch GitHub pull requests: ' + error.message);
+        }
+    }
+
+    async getUsernameByEmail(email: string): Promise<string | null> {
+        try {
+            console.log('🔍 Searching GitHub username for email:', email);
+            
+            // Search for users by email
+            const { data } = await this.octokit.search.users({
+                q: `${email} in:email`,
+            });
+
+            if (data.total_count === 0) {
+                console.log('⚠️ No GitHub user found for email:', email);
+                return null;
+            }
+
+            const username = data.items[0].login;
+            console.log('✅ Found GitHub username:', username, 'for email:', email);
+            
+            return username;
+        } catch (error: any) {
+            console.error('❌ Error fetching GitHub username by email:');
+            console.error('Error Message:', error.message);
+            console.error('Error Status:', error.status);
+            console.error('Error Response:', error.response?.data);
+            throw new Error('Failed to fetch GitHub username by email: ' + error.message);
         }
     }
 }

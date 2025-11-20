@@ -14,13 +14,13 @@ class AzureDevOpsService {
         };
     }
 
-    async getCurrentSprintWorkItems(): Promise<WorkItem[]> {
+    async getCurrentSprintWorkItems(email: string): Promise<WorkItem[]> {
         try {
+            console.log('🔍 Fetching work items for email:', email);
             console.log('🔍 Azure DevOps Organization:', config.azureDevOps.organization);
             console.log('🔍 Azure DevOps Project:', config.azureDevOps.project);
-            console.log('🔍 Azure DevOps PAT:', config.azureDevOps.pat ? '✓ Set' : '✗ Not Set');
             
-            // Query work items using @CurrentIteration
+            // Query work items for specific user email
             const wiqlQuery = {
                 query: `SELECT [System.Id], [System.Title], [System.AssignedTo], [System.State], [System.WorkItemType]
                         FROM WorkItems
@@ -29,7 +29,7 @@ class AzureDevOpsService {
                             OR [System.WorkItemType] = 'Bug')
                         AND [System.State] <> 'Closed'
                         AND [System.IterationPath] UNDER @CurrentIteration
-                        AND [System.AssignedTo] = @Me
+                        AND [System.AssignedTo] = '${email}'
                         ORDER BY [System.ChangedDate] DESC`,
             };
             
@@ -40,11 +40,10 @@ class AzureDevOpsService {
             });
 
             const workItemIds = queryResponse.data.workItems.map((wi: any) => wi.id);
-            console.log('✅ Found', workItemIds.length, 'work item IDs:', workItemIds);
+            console.log('✅ Found', workItemIds.length, 'work item IDs for', email);
 
             if (workItemIds.length === 0) {
-                console.log('⚠️ No work items found in current sprint');
-                return [];
+                console.log('⚠️ No work items found in current sprint for', email);
                 return [];
             }
 
@@ -63,11 +62,10 @@ class AzureDevOpsService {
                 assignedTo: wi.fields['System.AssignedTo']?.displayName,
             }));
         } catch (error: any) {
-            console.error('❌ Error fetching Azure DevOps work items:');
+            console.error('❌ Error fetching Azure DevOps work items for', email);
             console.error('Error Message:', error.message);
             console.error('Error Response:', error.response?.data);
             console.error('Status Code:', error.response?.status);
-            console.error('Full Error:', JSON.stringify(error, null, 2));
             throw new Error('Failed to fetch Azure DevOps work items: ' + (error.response?.data?.message || error.message));
         }
     }
